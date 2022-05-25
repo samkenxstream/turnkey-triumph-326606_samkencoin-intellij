@@ -20,7 +20,9 @@ import static java.util.stream.Collectors.joining;
 import com.google.common.collect.ImmutableList;
 import com.google.idea.blaze.base.async.process.ExternalTask;
 import com.google.idea.blaze.base.async.process.LineProcessingOutputStream;
-import com.google.idea.blaze.base.bazel.BuildSystemProvider;
+import com.google.idea.blaze.base.bazel.BuildSystem;
+import com.google.idea.blaze.base.bazel.BuildSystem.BuildInvoker;
+import com.google.idea.blaze.base.bazel.BuildSystem.SyncStrategy;
 import com.google.idea.blaze.base.command.BlazeCommand;
 import com.google.idea.blaze.base.command.BlazeCommandName;
 import com.google.idea.blaze.base.model.primitives.TargetExpression;
@@ -79,8 +81,15 @@ public class BlazeQueryDirectoryToTargetProvider implements DirectoryToTargetPro
   @Nullable
   private static ImmutableList<TargetInfo> runQuery(
       Project project, String query, BlazeContext context) {
+    BuildSystem buildSystem = Blaze.getBuildSystemProvider(project).getBuildSystem();
+    BuildInvoker invoker =
+        buildSystem.getSyncStrategy(project) == SyncStrategy.PARALLEL
+            ? buildSystem
+                .getParallelBuildInvoker(project, context)
+                .orElse(buildSystem.getBuildInvoker(project, context))
+            : buildSystem.getBuildInvoker(project, context);
     BlazeCommand command =
-        BlazeCommand.builder(getBinaryPath(project), BlazeCommandName.QUERY)
+        BlazeCommand.builder(invoker, BlazeCommandName.QUERY)
             .addBlazeFlags("--output=label_kind")
             .addBlazeFlags("--keep_going")
             .addBlazeFlags(query)
@@ -108,10 +117,5 @@ public class BlazeQueryDirectoryToTargetProvider implements DirectoryToTargetPro
       return null;
     }
     return outputProcessor.getTargets();
-  }
-
-  private static String getBinaryPath(Project project) {
-    BuildSystemProvider buildSystemProvider = Blaze.getBuildSystemProvider(project);
-    return buildSystemProvider.getSyncBinaryPath(project);
   }
 }

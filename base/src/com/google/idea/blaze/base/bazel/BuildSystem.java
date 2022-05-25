@@ -95,4 +95,21 @@ public interface BuildSystem {
   /** Populates the passed builder with version data. */
   void populateBlazeVersionData(
       WorkspaceRoot workspaceRoot, BlazeInfo blazeInfo, BlazeVersionData.Builder builder);
+
+  /**
+   * Attempts to return the binary path for the parallel invoker if the sync strategy is PARALLEL
+   * and the system supports it; otherwise returns the binary fo the standord invoker.
+   *
+   * <p>This method is for integration with legacy code. New code should invoke commands directly on
+   * the invoker.
+   */
+  default String getDefaultBinaryPath(Project project, BlazeContext context) {
+    if (getSyncStrategy(project) == SyncStrategy.PARALLEL) {
+      return getParallelBuildInvoker(project, context)
+          .orElse(getBuildInvoker(project, context))
+          .getBinaryPath();
+    } else {
+      return getBuildInvoker(project, context).getBinaryPath();
+    }
+  }
 }
