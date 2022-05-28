@@ -37,7 +37,7 @@ import com.intellij.openapi.diagnostic.Logger;
 import javax.annotation.Nullable;
 
 /** Java-specific handler for {@link BlazeCommandRunConfiguration}s. */
-public final class BlazeJavaRunConfigurationHandler implements BlazeCommandRunConfigurationHandler {
+public class BlazeJavaRunConfigurationHandler implements BlazeCommandRunConfigurationHandler {
 
   private static final Logger logger = Logger.getInstance(BlazeJavaRunConfigurationHandler.class);
 
@@ -88,7 +88,8 @@ public final class BlazeJavaRunConfigurationHandler implements BlazeCommandRunCo
     return "Java Handler";
   }
 
-  private static class BlazeJavaRunConfigurationRunner
+  /** Java-specific version of {@link BlazeCommandRunConfigurationRunner} */
+  protected static class BlazeJavaRunConfigurationRunner
       implements BlazeCommandRunConfigurationRunner {
 
     @Override
